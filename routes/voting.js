@@ -1,47 +1,80 @@
 import express from "express";
+import pool from "../config/db.js";
+
 const router = express.Router();
 
-let votingOpen = false;
-let startTime = null;
-let endTime = null;
+// ===============================
+// BACKEND STATUS (DATABASE REAL)
+// ===============================
+router.get("/status", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT is_open, start_time, end_time
+      FROM voting_status
+      WHERE id = 1
+    `);
 
-router.post("/start", (req, res) => {
-  votingOpen = true;
-  startTime = new Date().toISOString();
-  endTime = null;
+    const row = result.rows[0];
 
-  res.json({
-    success: true,
-    message: "Voting dimulai",
-    start_time: startTime
-  });
+    res.json({
+      voting_open: row.is_open,
+      start_time: row.start_time,
+      end_time: row.end_time,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.post("/stop", (req, res) => {
-  votingOpen = false;
-  endTime = new Date().toISOString();
+// ===============================
+// ADMIN OPEN (UPDATE DB)
+// ===============================
+router.post("/open", async (req, res) => {
+  try {
+    await pool.query(`
+      UPDATE voting_status
+      SET is_open = TRUE,
+          start_time = NOW(),
+          end_time = NULL
+      WHERE id = 1
+    `);
 
-  res.json({
-    success: true,
-    message: "Voting dihentikan",
-    end_time: endTime
-  });
+    res.json({ success: true, message: "Voting dibuka." });
+  } catch (err) {
+    res.status(500).json({ error: "Gagal membuka voting" });
+  }
 });
 
-router.get("/status", (req, res) => {
-  res.json({
-    voting_open: votingOpen,
-    start_time: startTime,
-    end_time: endTime
-  });
+// ===============================
+// ADMIN CLOSE (UPDATE DB)
+// ===============================
+router.post("/close", async (req, res) => {
+  try {
+    await pool.query(`
+      UPDATE voting_status
+      SET is_open = FALSE,
+          end_time = NOW()
+      WHERE id = 1
+    `);
+
+    res.json({ success: true, message: "Voting ditutup." });
+  } catch (err) {
+    res.status(500).json({ error: "Gagal menutup voting" });
+  }
 });
 
-router.post("/reset", (req, res) => {
-  votingOpen = false;
-  startTime = null;
-  endTime = null;
+// ===============================
+// RESET DATA (TIDAK DIUBAH)
+// ===============================
+router.post("/reset", async (req, res) => {
+  try {
+    await pool.query("TRUNCATE TABLE voters RESTART IDENTITY");
+    await pool.query("UPDATE voting_status SET is_open = FALSE, start_time=NULL, end_time=NULL WHERE id=1");
 
-  res.json({ success: true, message: "Voting direset" });
+    res.json({ success: true, message: "Voting direset" });
+  } catch (err) {
+    res.status(500).json({ error: "Gagal mereset voting" });
+  }
 });
 
 export default router;

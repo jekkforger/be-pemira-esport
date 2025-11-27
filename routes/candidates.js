@@ -1,11 +1,11 @@
 import express from "express";
-import { db } from "../db.js";
+import pool from "../config/db.js";
 
 const router = express.Router();
 
 // GET ALL CANDIDATES
 router.get("/", async (req, res) => {
-  const result = await db.query("SELECT * FROM candidates ORDER BY id ASC");
+  const result = await pool.query("SELECT * FROM candidates ORDER BY id ASC");
   res.json({ success: true, data: result.rows });
 });
 
@@ -23,7 +23,7 @@ router.post("/", async (req, res) => {
 
 // DELETE
 router.delete("/:id", async (req, res) => {
-  await db.query("DELETE FROM candidates WHERE id = $1", [req.params.id]);
+  await pool.query("DELETE FROM candidates WHERE id = $1", [req.params.id]);
   res.json({ success: true, message: "Kandidat dihapus" });
 });
 

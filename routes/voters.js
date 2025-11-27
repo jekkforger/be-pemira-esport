@@ -1,53 +1,45 @@
 import express from "express";
-import { db } from "../db.js";
+import pool from "../config/db.js";
 
 const router = express.Router();
 
-// SUBMIT VOTE
 router.post("/", async (req, res) => {
-  const { voter_name, candidate_id } = req.body;
+  try {
+    const { name, candidate_id } = req.body;
 
-  // cek double vote
-  const exists = await db.query(
-    "SELECT * FROM voters WHERE voter_name = $1",
-    [voter_name]
-  );
+    // voter_name masuk ke kolom "name"
+    await pool.query(
+      `
+      INSERT INTO voters (name, candidate_id, vote_time)
+      VALUES ($1, $2, NOW())
+    `,
+      [name, candidate_id]
+    );
 
-  if (exists.rowCount > 0) {
-    return res.json({ success: false, message: "Kamu sudah memilih!" });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("POST /api/voters ERROR:", err.message);
+    res.status(500).json({ success: false, message: err.message });
   }
-
-  await db.query(
-    "INSERT INTO voters (voter_name, candidate_id, time) VALUES ($1, $2, NOW())",
-    [voter_name, candidate_id]
-  );
-
-  res.json({ success: true, message: "Vote tersimpan" });
 });
 
-// GET VOTERS LIST
 router.get("/", async (req, res) => {
-  const result = await db.query(`
-    SELECT voters.*, candidates.name AS candidate_name
-    FROM voters
-    LEFT JOIN candidates ON candidates.id = voters.candidate_id
-    ORDER BY time DESC
-  `);
+  try {
+    const result = await pool.query(`
+      SELECT 
+        voters.name AS voter_name,
+        voters.vote_time AS time,
+        candidates.name AS candidate_name
+      FROM voters
+      JOIN candidates ON voters.candidate_id = candidates.id
+      ORDER BY voters.vote_time DESC
+    `);
 
-  res.json({ success: true, data: result.rows });
-});
-
-// SUMMARY
-router.get("/summary", async (req, res) => {
-  const result = await db.query(`
-    SELECT candidates.id, candidates.name, COUNT(voters.candidate_id) AS votes
-    FROM candidates
-    LEFT JOIN voters ON candidates.id = voters.candidate_id
-    GROUP BY candidates.id
-    ORDER BY candidates.id ASC
-  `);
-
-  res.json({ success: true, data: result.rows });
+    res.json({ success: true, data: result.rows });
+  } catch (err) {
+    console.error("GET /api/voters ERROR:", err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 export default router;
