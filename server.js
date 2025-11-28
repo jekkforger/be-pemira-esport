@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import pool from "./config/db.js";
 
 import adminRoutes from "./routes/admin.js";
 import votingRoutes from "./routes/voting.js";
@@ -28,6 +27,19 @@ app.use("/api/voters", voterRoutes);
 // ROOT TEST
 app.get("/", (req, res) => {
   res.send("Backend Pemira Esport API is running...");
+});
+
+app.get("/api/status", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT voting_open FROM status LIMIT 1");
+
+    res.json({
+      success: true,
+      voting_open: result.rows[0]?.voting_open || false,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // SERVER LISTEN
