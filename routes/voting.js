@@ -77,4 +77,41 @@ router.post("/reset", async (req, res) => {
   }
 });
 
+// ===============================
+// SIMPAN SUARA PEMILIH
+// ===============================
+router.post("/vote", async (req, res) => {
+  try {
+    const { name, candidate_id } = req.body;
+
+    if (!name || !candidate_id) {
+      return res.status(400).json({ error: "Data voting tidak lengkap" });
+    }
+
+    // Cek apakah voting sudah dibuka
+    const status = await pool.query(`
+      SELECT is_open FROM voting_status WHERE id = 1
+    `);
+
+    if (!status.rows[0].is_open) {
+      return res.status(403).json({ error: "Voting belum dibuka" });
+    }
+
+    // Simpan data voter
+    await pool.query(
+      `
+        INSERT INTO voters (name, candidate_id, created_at)
+        VALUES ($1, $2, NOW())
+      `,
+      [name, candidate_id]
+    );
+
+    res.json({ success: true, message: "Voting berhasil disimpan" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Gagal menyimpan voting" });
+  }
+});
+
 export default router;
