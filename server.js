@@ -87,7 +87,6 @@ app.delete("/api/reset", async (req, res) => {
   }
 });
 
-// FINAL SERVER
 app.get("/", (req, res) => {
   res.send("Backend Pemira Esport API is running...");
 });
