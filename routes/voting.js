@@ -77,17 +77,4 @@ router.post("/reset", async (req, res) => {
   }
 });
 
-router.get("/status", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT voting_open FROM status LIMIT 1");
-
-    res.json({
-      success: true,
-      voting_open: result.rows[0]?.voting_open || false,
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
 export default router;
