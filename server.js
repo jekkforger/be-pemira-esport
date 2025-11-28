@@ -87,12 +87,14 @@ app.delete("/api/reset", async (req, res) => {
   }
 });
 
-// ❌ HAPUS route status ganda ini
-// app.get("/api/status", async (req, res) => { ... })
-
 // FINAL SERVER
+app.get("/", (req, res) => {
+  res.send("Backend Pemira Esport API is running...");
+});
+
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
   console.log("Server running on " + port);
 });
+
