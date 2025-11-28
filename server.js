@@ -14,87 +14,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// REGISTER ROUTES
+// ROUTES
 app.use("/api/admin", adminRoutes);
 app.use("/api/voting", votingRoutes);
 app.use("/api/candidates", candidateRoutes);
 app.use("/api/voters", voterRoutes);
 
-// ❌ HAPUS yang salah ini
-// app.get("/api/status", votingRoutes);
-
-// ========================================
-// 🔥 API: STATUS VOTING (yang BENAR, cuma 1x)
-// ========================================
-app.get("/api/status", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT is_open FROM voting_status WHERE id = 1"
-    );
-
-    const isOpen = result.rows[0]?.is_open ?? false;
-
-    return res.json({
-      success: true,
-      voting_open: isOpen,
-    });
-  } catch (error) {
-    console.error("STATUS ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      voting_open: false,
-      message: "Gagal mengambil status voting",
-    });
-  }
-});
-
-// ========================================
-// API: TOTAL VOTES PER CANDIDATE
-// ========================================
-app.get("/api/votes", async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT candidate_id, COUNT(*) AS total
-      FROM voters
-      GROUP BY candidate_id
-    `);
-
-    const votes = {};
-    result.rows.forEach((row) => {
-      votes[row.candidate_id] = Number(row.total);
-    });
-
-    res.json({ success: true, data: votes });
-  } catch (err) {
-    console.error("GET /api/votes ERROR:", err.message);
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// ====================== RESET VOTING ======================
-app.delete("/api/reset", async (req, res) => {
-  try {
-    await pool.query("TRUNCATE TABLE voters RESTART IDENTITY");
-
-    await pool.query(
-      "UPDATE voting_status SET is_open = FALSE WHERE id = 1"
-    );
-
-    return res.json({ message: "Voting berhasil direset." });
-  } catch (error) {
-    console.error("RESET ERROR:", error);
-    res.status(500).json({ error: "Gagal mereset voting" });
-  }
-});
-
 app.get("/", (req, res) => {
   res.send("Backend Pemira Esport API is running...");
 });
 
-const port = process.env.PORT ?? 3000;
+// ❗ PORT FIX
+const port = Number(process.env.PORT) || 3000;
 
-app.listen(port, "0.0.0.0", () => {
-  console.log("Server running on " + port);
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
 });
-
-
