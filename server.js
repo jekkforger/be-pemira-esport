@@ -11,21 +11,26 @@ import voterRoutes from "./routes/voters.js";
 dotenv.config();
 const app = express();
 
-app.use(cors());
+// CORS FIX — penting kalau FE di Vercel, BE di Railway
+app.use(cors({
+  origin: "*",
+  methods: "GET,POST,DELETE,PUT",
+}));
+
 app.use(express.json());
 
-// ROUTES
+// REGISTER ROUTES
 app.use("/api/admin", adminRoutes);
 app.use("/api/voting", votingRoutes);
 app.use("/api/candidates", candidateRoutes);
 app.use("/api/voters", voterRoutes);
 
-// TEST ROOT
+// ROOT TEST
 app.get("/", (req, res) => {
   res.send("Backend Pemira Esport API is running...");
 });
 
-// LISTEN
+// SERVER LISTEN
 const port = process.env.PORT || 8080;
 app.listen(port, "0.0.0.0", () => {
   console.log("Server running on port " + port);
