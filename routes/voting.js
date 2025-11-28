@@ -114,4 +114,44 @@ router.post("/vote", async (req, res) => {
   }
 });
 
+router.get("/results", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT candidate_id, COUNT(*) AS total
+      FROM voters
+      GROUP BY candidate_id
+    `);
+
+    const data = {};
+
+    result.rows.forEach((r) => {
+      data[r.candidate_id] = Number(r.total);
+    });
+
+    res.json({ success: true, data });
+  } catch (err) {
+    res.status(500).json({ error: "Gagal memuat hasil voting" });
+  }
+});
+
+router.get("/list", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        v.name AS voter_name,
+        v.candidate_id,
+        c.name AS candidate_name,
+        v.created_at AS time
+      FROM voters v
+      LEFT JOIN candidates c ON c.id = v.candidate_id
+      ORDER BY v.id DESC
+    `);
+
+    res.json({ success: true, data: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: "Gagal memuat daftar pemilih" });
+  }
+});
+
+
 export default router;
