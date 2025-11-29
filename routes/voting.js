@@ -140,7 +140,7 @@ router.get("/list", async (req, res) => {
       SELECT 
         v.name AS voter_name,
         v.candidate_id,
-        c.name AS candidate_name,
+        c.nama AS candidate_name,
         v.created_at AS time
       FROM voters v
       LEFT JOIN candidates c ON c.id = v.candidate_id
