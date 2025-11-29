@@ -66,7 +66,7 @@ router.post("/close", async (req, res) => {
 // ===============================
 // RESET DATA (TIDAK DIUBAH)
 // ===============================
-router.post("/reset", async (req, res) => {
+router.delte("/reset", async (req, res) => {
   try {
     await pool.query("TRUNCATE TABLE voters RESTART IDENTITY");
     await pool.query("UPDATE voting_status SET is_open = FALSE, start_time=NULL, end_time=NULL WHERE id=1");
